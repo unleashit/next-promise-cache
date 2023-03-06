@@ -1,0 +1,12 @@
+src
+.eslintrc.js
+jest.config.ts
+tsconfig.json
+node_modules
+coverage
+.idea
+.vscode
+*.log
+.gitignore
+.env*
+
