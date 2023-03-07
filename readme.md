@@ -86,7 +86,7 @@ async function Page() {
 
 ## Api
 
-> **_NOTE:_**  Keep in mind passing `opts` to fetch methods, it will be shallowly merged with defaults. For example, if you pass any custom headers, be sure to also include `Content-Type: application/json` if you need it.
+> **_NOTE:_**  Keep in mind passing `opts` to fetch methods will be shallowly merged with defaults. For example, if you pass any custom headers, be sure to also include `Content-Type: application/json` if you need it.
 
 ### `new API(options)`
 
@@ -131,7 +131,7 @@ type key = string;
 
 ### `api.getCacheStats()`
 
-Returns object with a Map object of the current cache (`values`) and size (`cacheSize`).
+Returns object with two properties: `values` (Map object of the current cache) and `cacheSize` (size).
 
 ### `api.logCache()`
 

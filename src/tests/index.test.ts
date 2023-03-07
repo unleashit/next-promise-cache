@@ -1,7 +1,7 @@
 import { nextTick } from "./utils";
 import API from "../index";
 import { users, User, newUser } from "./fixtures";
-import { mockFetch } from "./mockFetchWith";
+import { mockFetch } from "./mockFetch";
 import { FetchCacheError } from "../FetchCacheError";
 
 let api: API;
