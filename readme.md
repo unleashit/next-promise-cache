@@ -1,5 +1,9 @@
 # fetch-cache
 
+[![NPM](https://img.shields.io/npm/l/@unleashit/fetch-cache.svg)](https://github.com/unleashit/fetch-cache/blob/master/LICENSE)
+[![npm (scoped)](https://img.shields.io/npm/v/@unleashit/fetch-cache.svg)](https://www.npmjs.com/package/@unleashit/fetch-cache)
+[![npm bundle size](https://img.shields.io/bundlephobia/minzip/@unleashit/fetch-cache.svg)](https://bundlephobia.com/result?p=@unleashit/fetch-cache)
+
 Wasn't satisfied with the black boxed way of data fetching in the new [Next JS 13 app directory](https://nextjs.org/blog/next-13#new-app-directory-beta), so I made this. This is also a wrapper around [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch), but stightly higher level and with a bit more control and insight into what is being cached. It's also browser compatible.
 
 # Features
