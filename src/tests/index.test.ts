@@ -2,6 +2,7 @@ import { nextTick } from "./utils";
 import API from "../index";
 import { users, User, newUser } from "./fixtures";
 import { mockFetch } from "./mockFetchWith";
+import { FetchCacheError } from "../FetchCacheError";
 
 let api: API;
 
@@ -43,9 +44,22 @@ describe("GET requests", () => {
   });
 
   it("throws 404 when sent to bad url", async () => {
-    expect(async () => await api.get("/users/bling")).rejects.toThrow(
-      "Couldn't fetch. Status: 404"
+    let thrownError;
+    try {
+      await api.get("/users/bling");
+    } catch (err) {
+      thrownError = err;
+    }
+
+    expect(thrownError).toBeInstanceOf(FetchCacheError);
+    expect((thrownError as FetchCacheError).message).toEqual(
+      "Problem fetching. Status: 404"
     );
+    // ensure fetch response is included in error
+    expect((thrownError as FetchCacheError).fetchResponse).toHaveProperty("ok");
+    // expect(async () => await api.get("/users/bling")).rejects.toThrow(
+    //   FetchCacheError
+    // );
   });
 
   describe("Server tests", () => {

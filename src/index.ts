@@ -94,9 +94,12 @@ export default class API {
         this[handleError](e);
       });
 
-    // purge last in value when cache is full
+    // check if path exists then purge, since it will be stale
+    this.invalidate(encodedPath);
+
+    // purge first in value when cache is full
     if (this._maxCacheSize !== -1 && this[cache].size === this._maxCacheSize) {
-      this[cache].delete(this[cache].keys().next().value);
+      this.invalidate(this[cache].keys().next().value);
     }
 
     this[cache].set(encodedPath, {
@@ -162,7 +165,7 @@ export default class API {
       this._debug === "verbose" && console.error(resp);
       throw new FetchCacheError(
         new Error(`Problem fetching. Status: ${resp.status}`),
-        resp.status
+        resp
       );
     }
     return resp.json() as Promise<T>;
@@ -171,9 +174,9 @@ export default class API {
   [handleError](e: unknown) {
     this._debug === "verbose" && console.error(e);
 
-    if (e instanceof Error || (e as Error)?.message) {
-      throw new FetchCacheError(e as Error, 500);
-    }
+    // if (e instanceof Error || (e as Error)?.message) {
+    //   throw new FetchCacheError(e as Error, 500);
+    // }
 
     throw e;
   }
@@ -182,7 +185,11 @@ export default class API {
     const value = this[cache].get(encodedPath);
     if (!value) return false;
 
-    // if value exists during server request lifecycle, always return from cache
+    /**
+     * if value exists on server, always return from cache
+     * since its assumed the cache lifetime is per request
+     * TODO: consider allowing cache expiration on server for longer lived/shareable use cases?
+     */
     if (typeof window === "undefined") return true;
 
     // on the client, invalidate cache on expiration
