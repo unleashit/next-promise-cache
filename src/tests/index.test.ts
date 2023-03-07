@@ -3,10 +3,19 @@ import API from "../index";
 import { users, User, newUser } from "./fixtures";
 import { mockFetch } from "./mockFetch";
 import { FetchCacheError } from "../FetchCacheError";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+} from "vitest";
 
 let api: API;
 
-global.fetch = jest.fn() as jest.Mock;
+global.fetch = vi.fn();
 
 beforeEach(() => {
   mockFetch();
@@ -15,7 +24,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  (fetch as jest.Mock).mockClear();
+  (fetch as Mock).mockClear();
 });
 
 describe("GET requests", () => {
@@ -70,7 +79,7 @@ describe("GET requests", () => {
       await api.get<User[]>({ pathName: "/users", cacheTime: 0 });
 
       expect(fetch).toHaveBeenCalledWith("https://example.com/users");
-      expect((fetch as jest.Mock).mock.calls).toHaveLength(1);
+      expect((fetch as Mock).mock.calls).toHaveLength(1);
     });
   });
 
@@ -83,7 +92,7 @@ describe("GET requests", () => {
 
       await api.get<User[]>("/users");
       await api.get<User[]>("/users");
-      expect((fetch as jest.Mock).mock.calls).toHaveLength(2);
+      expect((fetch as Mock).mock.calls).toHaveLength(2);
     });
 
     it("promises are cached for the designated time", async () => {
@@ -94,14 +103,14 @@ describe("GET requests", () => {
       await nextTick(500);
       await api.get<User[]>({ pathName: "/users", cacheTime: 1000 });
 
-      expect((fetch as jest.Mock).mock.calls).toHaveLength(1);
+      expect((fetch as Mock).mock.calls).toHaveLength(1);
 
       await nextTick(2000);
       await api.get<User[]>({ pathName: "/users", cacheTime: 1000 });
       await api.get<User[]>({ pathName: "/users", cacheTime: 1000 });
       await api.get<User[]>({ pathName: "/users", cacheTime: 1000 });
 
-      expect((fetch as jest.Mock).mock.calls).toHaveLength(2);
+      expect((fetch as Mock).mock.calls).toHaveLength(2);
     });
 
     it("respects max cache size and invalidates FIFO", async () => {
@@ -127,9 +136,9 @@ describe("GET requests", () => {
       expect(values.keys().next().value).toEqual("/users/3");
 
       // verify value is still returned from cache when expected
-      expect((fetch as jest.Mock).mock.calls).toHaveLength(12);
+      expect((fetch as Mock).mock.calls).toHaveLength(12);
       await api.get<User>({ pathName: "/users/12", cacheTime: 30000 });
-      expect((fetch as jest.Mock).mock.calls).toHaveLength(12);
+      expect((fetch as Mock).mock.calls).toHaveLength(12);
     });
   });
 
@@ -141,7 +150,7 @@ describe("GET requests", () => {
     api.invalidate("/users/1");
     await api.get<User>("/users/1");
     await api.get<User>("/users/2");
-    expect((fetch as jest.Mock).mock.calls).toHaveLength(3);
+    expect((fetch as Mock).mock.calls).toHaveLength(3);
 
     // cache is emptied after passing a `*` flag
     api.invalidate("*");
@@ -156,7 +165,7 @@ describe("Mutate requests", () => {
     const resp = await api.post<User[]>("/users/post", {
       body: user4,
     });
-    const calledWith = (fetch as jest.Mock).mock.calls[0][1];
+    const calledWith = (fetch as Mock).mock.calls[0][1];
     expect(calledWith.body).toEqual(user4);
     expect(resp).toEqual({ success: true });
   });
@@ -164,7 +173,7 @@ describe("Mutate requests", () => {
     await api.post<User[]>("/users/post", {
       body: user4,
     });
-    const calledWith = (fetch as jest.Mock).mock.calls[0][1];
+    const calledWith = (fetch as Mock).mock.calls[0][1];
 
     expect(calledWith.method).toEqual("post");
     expect(Object.fromEntries(calledWith.headers)).toEqual({
@@ -177,7 +186,7 @@ describe("Mutate requests", () => {
       body: user4,
     });
 
-    const calledWith = (fetch as jest.Mock).mock.calls[0][1];
+    const calledWith = (fetch as Mock).mock.calls[0][1];
     expect(calledWith.method).toEqual("put");
     expect(resp).toEqual({ success: true });
 
@@ -185,7 +194,7 @@ describe("Mutate requests", () => {
       body: user4,
     });
 
-    const calledWith2 = (fetch as jest.Mock).mock.calls[1][1];
+    const calledWith2 = (fetch as Mock).mock.calls[1][1];
     expect(calledWith2.method).toEqual("patch");
     expect(resp2).toEqual({ success: true });
 
@@ -193,7 +202,7 @@ describe("Mutate requests", () => {
       body: user4,
     });
 
-    const calledWith3 = (fetch as jest.Mock).mock.calls[2][1];
+    const calledWith3 = (fetch as Mock).mock.calls[2][1];
     expect(calledWith3.method).toEqual("delete");
     expect(resp3).toEqual({ success: true });
   });
@@ -203,13 +212,13 @@ describe("other", () => {
   it("handles OPTIONS and HEAD http verbs", async () => {
     const resp = await api.options("/users/options");
 
-    const calledWith = (fetch as jest.Mock).mock.calls[0][1];
+    const calledWith = (fetch as Mock).mock.calls[0][1];
     expect(calledWith.method).toEqual("options");
     expect(resp).toEqual("'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'");
 
     await api.head<User[]>("/users/head");
 
-    const calledWith2 = (fetch as jest.Mock).mock.calls[1][1];
+    const calledWith2 = (fetch as Mock).mock.calls[1][1];
     expect(calledWith2.method).toEqual("head");
   });
 

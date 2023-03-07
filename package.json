@@ -1,13 +1,13 @@
 {
   "name": "@unleashit/fetch-cache",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Isomorphic fetch wrapper and promise cache with React Server Components in mind",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "rm -rf ./dist && tsc",
-    "test": "jest",
-    "prepublish": "npm run build"
+    "test": "vitest",
+    "prepublishOnly": "vitest run && npm run build"
   },
   "keywords": [
     "promise cache",
@@ -24,7 +24,7 @@
     "type": "git",
     "url": "git+https://github.com/unleashit/fetch-cache.git"
   },
-  "homepage": "https://github.com/fetchCache",
+  "homepage": "https://github.com/unleashit/fetch-cache",
   "bugs": {
     "url": "https://github.com/unleashit/fetch-cache"
   },
@@ -32,13 +32,12 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/jest": "^29.4.0",
-    "@typescript-eslint/eslint-plugin": "^5.54.0",
+    "@typescript-eslint/eslint-plugin": "^5.54.1",
+    "@vitest/coverage-c8": "^0.29.2",
     "eslint": "^8.35.0",
-    "eslint-config-prettier": "^8.6.0",
-    "jest": "^29.4.3",
+    "eslint-config-prettier": "^8.7.0",
     "prettier": "^2.8.4",
-    "ts-jest": "^29.0.5",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "vitest": "^0.29.2"
   }
 }
