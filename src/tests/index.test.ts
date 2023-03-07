@@ -11,7 +11,7 @@ global.fetch = jest.fn() as jest.Mock;
 beforeEach(() => {
   mockFetch();
   (global as any).window = undefined;
-  api = new API({ baseurl: "https://example.com" });
+  api = new API({ baseurl: "https://example.com", defaultCacheTime: 5000 });
 });
 
 afterEach(() => {
@@ -43,7 +43,7 @@ describe("GET requests", () => {
     expect(fetch).toHaveBeenCalledWith("https://example.com/users");
   });
 
-  it("throws 404 when sent to bad url", async () => {
+  it("throws FetchCacheError with 404 status and fetch's Response when sent to bad url", async () => {
     let thrownError;
     try {
       await api.get("/users/bling");
@@ -64,10 +64,10 @@ describe("GET requests", () => {
 
   describe("Server tests", () => {
     // if window is undefined, it is assumed running on server
-    it("cached promise is always returned on repeat requests", async () => {
-      await api.get<User[]>("/users");
-      await api.get<User[]>("/users");
-      await api.get<User[]>("/users");
+    it("cached promise is always returned on repeat requests, cacheTime is ignored", async () => {
+      await api.get<User[]>({ pathName: "/users", cacheTime: 0 });
+      await api.get<User[]>({ pathName: "/users", cacheTime: 0 });
+      await api.get<User[]>({ pathName: "/users", cacheTime: 0 });
 
       expect(fetch).toHaveBeenCalledWith("https://example.com/users");
       expect((fetch as jest.Mock).mock.calls).toHaveLength(1);
@@ -78,6 +78,8 @@ describe("GET requests", () => {
     it("in browser env, promises are not cached by default", async () => {
       // simulate a browser env
       (global as any).window = {};
+      // reinstantiate here since beforeEach() adds a cacheTime
+      api = new API({ baseurl: "https://example.com" });
 
       await api.get<User[]>("/users");
       await api.get<User[]>("/users");
@@ -134,11 +136,11 @@ describe("GET requests", () => {
   it("cache can be invalidated by key or in full", async () => {
     (global as any).window = {};
 
-    await api.get<User>({ pathName: "/users/1", cacheTime: 5000 });
-    await api.get<User>({ pathName: "/users/2", cacheTime: 5000 });
+    await api.get<User>("/users/1");
+    await api.get<User>("/users/2");
     api.invalidate("/users/1");
-    await api.get<User>({ pathName: "/users/1", cacheTime: 5000 });
-    await api.get<User>({ pathName: "/users/2", cacheTime: 5000 });
+    await api.get<User>("/users/1");
+    await api.get<User>("/users/2");
     expect((fetch as jest.Mock).mock.calls).toHaveLength(3);
 
     // cache is emptied after passing a `*` flag

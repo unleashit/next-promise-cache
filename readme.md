@@ -1,32 +1,32 @@
-## fetch-cache
+# fetch-cache
 
-Wasn't satisfied with the black boxed way of data fetching in the new [Next JS 13 app directory](https://nextjs.org/blog/next-13#new-app-directory-beta), so I made this. This is also a wrapper around [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch), but with a bit more control and insight into what is being cached. It's also browser compatible.
+Wasn't satisfied with the black boxed way of data fetching in the new [Next JS 13 app directory](https://nextjs.org/blog/next-13#new-app-directory-beta), so I made this. This is also a wrapper around [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch), but stightly higher level and with a bit more control and insight into what is being cached. It's also browser compatible.
 
-### Features
+# Features
 
 - Like Next JS Fetch deduping it caches promises, not values, avoiding race conditions and extra network requests
-- On the server, it always caches for full request lifecycle (when instantiated in a `React.cache`)
+- On the server in RSCs or elsewhere, it can be made to cache for the full request/response lifetime (when instantiated in a `React.cache`)
 - Can manually invalidate values or entire cache
 - Configurable cache size (FIFO when full) 
 - Optional time based cache on client
 - All HTTP methods are available but caches GET requests only
 - Handles the fetch double promise, basic error conditions and adds common headers
-- Types include the Next extensions to fetch, so you can add for example `{ next: { revalidate: 10 } }` as normal
-- Customize/override anything
-- Can debug cache
+- Types include the Next extensions to fetch, so you can add Next's cache or revalidate options as normal
+- Customize/override most anything
+- Can debug and access cache
 
-### Install
+## Install
 
 ```
 npm install @unleashit/fetch-cache
 ```
 
-### Requirements
-Fetch on node requires Node v18+ (or 17.5 with experimental flag).
+## Requirements
+Fetch on Node requires Node v18+ (or 17.5 with experimental flag).
 
-### Setting up
+## Setting up
 
-If you are using this with Next JS and React Server Components, `fetch-cache` should be wrapped within `React.cache` (provided by Next) and imported from a separate file. This will cache the instance for the lifecycle of the request (and recreate for each new request).
+If you are using this with Next JS and React Server Components, `fetch-cache` should be wrapped within `React.cache` (provided by Next) and imported from a separate file. This will cache the instance for the lifetime of the request (and throw out on each new request).
 
 ```typescript
 // services.ts
@@ -50,11 +50,11 @@ export const api = typeof window === "undefined"
 
 > **_NOTE:_**  Keep in mind `React.cache` takes a function. So being consistent between client and server will maintain the same calling syntax. 
 
-Of course if you're not using RSCs or want it only on the client, you don't need the above. Just instantiate and use as normal. If you have a custom server and want a fresh cache with each request/response, either create a new instance with each request or reset the cache with `api.invalidate('*')`.
+Of course if you're not using RSCs or want it only on the client, you don't need the above. Just instantiate and use as normal. If you have a custom server and want a fresh cache with each request, either create a new instance per request or reset the cache with `api.invalidate('*')`.
 
-### Using
+## Using
 
-Retrieving data is similar to how Next recomends using fetch. If you need the same data in multiple places, rather than prop drilling, just await the promise in each place you need it. Thanks to the cache, it will only actually be called once. As a convenience, `fetch-cache` handles the double promise and error states. `FetchCacheError` extends Error and includes the `status` code when available. 
+Retrieving data is similar to how Next recommends using fetch. If you need the same data in multiple places, rather than prop drilling, just await the promise in each place you need it. Thanks to the cache, it will only actually be called once. As a convenience, `fetch-cache` handles the double promise and error states. `FetchCacheError` extends Error and includes fetch's `Response` and `status` code when available. 
 
 
 > **_NOTE:_**  Don't forget if you've exported a _function that returns the instance_, you have to call it first, either in advance or inline with each use.
@@ -86,14 +86,14 @@ async function Page() {
 
 ### `new API(options)`
 
-Create a new instance of fetch cache.
+Creates a new instance of fetch cache. Note that by default, `defaultCacheTime` is set to `0`. This is only for the client (server is always cached per request), so if you want a cache on the client, you need to either specify a default here and/or override in individual fetches.
 
 ```typescript
 type options = {
     baseurl: string;
     debug?: boolean | 'verbose'// false,
     defaultCacheTime?: number // 0 (milliseconds)
-    maxCacheSize?: number // 200,
+    maxCacheSize?: number // 200 (-1 for no limit)
 }
 ```
 
