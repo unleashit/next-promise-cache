@@ -20,7 +20,7 @@ global.fetch = vi.fn();
 beforeEach(() => {
   mockFetch();
   (global as any).window = undefined;
-  api = new API({ baseurl: "https://example.com", defaultCacheTime: 5000 });
+  api = new API({ baseurl: "https://example.com", defaultCacheTime: 5 });
 });
 
 afterEach(() => {
@@ -109,16 +109,16 @@ describe("GET requests", () => {
       // simulate a browser env
       (global as any).window = {};
 
-      await api.get<User[]>({ pathName: "/users", cacheTime: 1000 });
+      await api.get<User[]>({ pathName: "/users", cacheTime: 1 });
       await nextTick(500);
-      await api.get<User[]>({ pathName: "/users", cacheTime: 1000 });
+      await api.get<User[]>({ pathName: "/users", cacheTime: 1 });
 
       expect((fetch as Mock).mock.calls).toHaveLength(1);
 
       await nextTick(2000);
-      await api.get<User[]>({ pathName: "/users", cacheTime: 1000 });
-      await api.get<User[]>({ pathName: "/users", cacheTime: 1000 });
-      await api.get<User[]>({ pathName: "/users", cacheTime: 1000 });
+      await api.get<User[]>({ pathName: "/users", cacheTime: 1 });
+      await api.get<User[]>({ pathName: "/users", cacheTime: 1 });
+      await api.get<User[]>({ pathName: "/users", cacheTime: 1 });
 
       expect((fetch as Mock).mock.calls).toHaveLength(2);
     });
@@ -129,15 +129,13 @@ describe("GET requests", () => {
       api = new API({ baseurl: "https://example.com", maxCacheSize: 10 });
       const promises = Array(10)
         .fill(undefined)
-        .map((_, i) =>
-          api.get({ pathName: `/users/${i + 1}`, cacheTime: 30000 })
-        );
+        .map((_, i) => api.get({ pathName: `/users/${i + 1}`, cacheTime: 30 }));
 
       await Promise.all(promises);
       expect(api.getCacheStats().cacheSize).toEqual(10);
 
-      await api.get<User>({ pathName: "/users/11", cacheTime: 30000 });
-      await api.get<User>({ pathName: "/users/12", cacheTime: 30000 });
+      await api.get<User>({ pathName: "/users/11", cacheTime: 30 });
+      await api.get<User>({ pathName: "/users/12", cacheTime: 30 });
 
       const { values, cacheSize } = api.getCacheStats() as any;
       expect(cacheSize).toEqual(10);
@@ -147,7 +145,7 @@ describe("GET requests", () => {
 
       // verify value is still returned from cache when expected
       expect((fetch as Mock).mock.calls).toHaveLength(12);
-      await api.get<User>({ pathName: "/users/12", cacheTime: 30000 });
+      await api.get<User>({ pathName: "/users/12", cacheTime: 30 });
       expect((fetch as Mock).mock.calls).toHaveLength(12);
     });
   });

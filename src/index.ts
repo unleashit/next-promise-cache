@@ -218,7 +218,7 @@ export default class API {
     if (typeof window === "undefined") return true;
 
     // on the client, invalidate cache on expiration
-    return new Date().getTime() - value.timestamp < cacheTime;
+    return new Date().getTime() - value.timestamp < cacheTime * 1000; // convert secs to ms;
   }
 
   [validate](responseType: ResponseTypes) {

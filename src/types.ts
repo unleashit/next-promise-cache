@@ -18,5 +18,5 @@ export type HandlerArgs = [pathName: string, opts?: FetchOpts];
 export type GetHandlerArgs = {
   pathName: string;
   opts?: FetchOpts;
-  cacheTime?: number; // milliseconds
+  cacheTime?: number; // seconds
 };
