@@ -10,14 +10,13 @@ Wasn't satisfied with the black boxed way of data fetching in the new [Next JS 1
 
 - Like Next JS Fetch deduping it caches promises, not values, avoiding race conditions and extra network requests
 - On the server in RSCs or elsewhere, it can be made to cache for the full request/response lifetime (when instantiated in a `React.cache`)
-- Can manually invalidate values or entire cache
-- Configurable cache size (FIFO when full) 
 - Optional time based cache on client
+- Can debug, access or invalidate values or entire cache
+- Configurable cache size (FIFO when full) 
 - All HTTP methods are available but caches GET requests only
 - Handles the fetch double promise, basic error conditions and adds common headers
-- Types include the Next extensions to fetch, so you can add Next's cache or revalidate options as normal
-- Customize/override most anything
-- Can debug and access cache
+- Types include the Next extensions to fetch, so you can add for example Next's revalidate options as usual
+- Customize/override most things
 
 ## Install
 
@@ -58,8 +57,7 @@ Of course if you're not using RSCs or want it only on the client, you don't need
 
 ## Using
 
-Retrieving data is similar to how Next recommends using fetch. If you need the same data in multiple places, rather than prop drilling, just await the promise in each place you need it. Thanks to the cache, it will only actually be called once. As a convenience, `fetch-cache` handles the double promise and error states. `FetchCacheError` extends Error and includes fetch's `Response` and `status` code when available. 
-
+Retrieving data is similar to how Next recommends using fetch. If you need the same data in multiple places, rather than prop drilling, just await the promise in each place you need it. Thanks to the cache, it will only actually be called once. As a convenience, `fetch-cache` handles the double promise and error states. It returns data in whatever format is received (json, text, blob, etc). Otherwise, a `FetchCacheError` is thrown in both general failure and non-2xx response conditions containing the `Response` and `status` code when available. 
 
 > **_NOTE:_**  Don't forget if you've exported a _function that returns the instance_, you have to call it first, either in advance or inline with each use.
 

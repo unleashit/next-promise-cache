@@ -30,7 +30,11 @@ afterEach(() => {
 describe("GET requests", () => {
   it("makes a get request and returns data", async () => {
     const resp = await api.get<User[]>("/users");
-    expect(fetch).toHaveBeenCalledWith("https://example.com/users");
+
+    expect(fetch).toHaveBeenCalledWith(
+      "https://example.com/users",
+      expect.any(Object)
+    );
     expect(resp[0].name).toEqual(users[0].name);
     expect(resp[1].id).toEqual(users[1].id);
   });
@@ -49,7 +53,10 @@ describe("GET requests", () => {
 
   it("can be called with or without base url", async () => {
     await api.get<User[]>("https://example.com/users");
-    expect(fetch).toHaveBeenCalledWith("https://example.com/users");
+    expect(fetch).toHaveBeenCalledWith(
+      "https://example.com/users",
+      expect.any(Object)
+    );
   });
 
   it("throws FetchCacheError with 404 status and fetch's Response when sent to bad url", async () => {
@@ -78,7 +85,10 @@ describe("GET requests", () => {
       await api.get<User[]>({ pathName: "/users", cacheTime: 0 });
       await api.get<User[]>({ pathName: "/users", cacheTime: 0 });
 
-      expect(fetch).toHaveBeenCalledWith("https://example.com/users");
+      expect(fetch).toHaveBeenCalledWith(
+        "https://example.com/users",
+        expect.any(Object)
+      );
       expect((fetch as Mock).mock.calls).toHaveLength(1);
     });
   });
