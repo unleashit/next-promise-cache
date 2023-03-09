@@ -4,7 +4,7 @@
 [![npm (scoped)](https://img.shields.io/npm/v/@unleashit/fetch-cache.svg)](https://www.npmjs.com/package/@unleashit/fetch-cache)
 [![npm bundle size](https://img.shields.io/bundlephobia/minzip/@unleashit/fetch-cache.svg)](https://bundlephobia.com/result?p=@unleashit/fetch-cache)
 
-Wasn't satisfied with the black boxed way of data fetching in the new [Next JS 13 app directory](https://nextjs.org/blog/next-13#new-app-directory-beta), so I made this. This is also a wrapper around [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch), but stightly higher level and with a bit more control and insight into what is being cached. It's also browser compatible.
+Wasn't satisfied with the black boxed way of data fetching in the new [Next JS 13 app directory](https://nextjs.org/blog/next-13#new-app-directory-beta), so I made this. This is also a wrapper around [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch), but slightly higher level and with a bit more control and insight into what is being cached. It's also browser compatible.
 
 # Features
 
@@ -57,7 +57,9 @@ Of course if you're not using RSCs or want it only on the client, you don't need
 
 ## Using
 
-Retrieving data is similar to how Next recommends using fetch. If you need the same data in multiple places, rather than prop drilling, just await the promise in each place you need it. Thanks to the cache, it will only actually be called once. As a convenience, `fetch-cache` handles the double promise and error states. It returns data in whatever format is received (json, text, blob, etc). Otherwise, a `FetchCacheError` is thrown in both general failure and non-2xx response conditions containing the `Response` and `status` code when available. 
+Retrieving data is similar to how Next recommends using fetch. If you need the same data in multiple places, rather than prop drilling, just await the promise in each place you need it. Thanks to the cache, it will only actually be called once.
+
+As a convenience, `fetch-cache` handles the double promise and error states. By default it will assume and attempt to return JSON, but you can specifify whatever format you need (text, blob, etc.). If the response contains a non-2xx status code, a `FetchCacheError` is thrown with the original `Response` and `status`. A general failure like a network issue throws the standard error.
 
 > **_NOTE:_**  Don't forget if you've exported a _function that returns the instance_, you have to call it first, either in advance or inline with each use.
 
