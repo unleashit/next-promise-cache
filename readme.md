@@ -102,22 +102,34 @@ type options = {
 ### `api.get(options)`
 
 ```typescript
-type options = string // pathname
- | {
-  pathName: string;
-  opts?: NextExtendedFetchConfig; // intersection of standard fetch options with Next's
-  cacheTime?: number; // defaultCacheTime
+type ResponseTypes = "json" | "text" | "blob" | "arrayBuffer" | "formData"; // default is "json"
+
+// NextExtendedFetchConfig is intersection of standard fetch request options with Next's
+type FetchOpts = NextExtendedFetchConfig & { responseType?: ResponseTypes };
+
+type GetHandlerArgs = string // pathname
+    | {
+    pathName: string;
+    opts?: FetchOpts;
+    cacheTime?: number; // seconds
 };
 ```
+
+If sent an `opts` object, it will be shallow merged over some common defaults and passed to Fetch.
+
+By default, fetch will call and return `response.json()` after the initial response. Set the `responseType` property if you expect another data type. 
+
 
 ### `api.post(options)` `api.put(options)` `api.patch(options)` `api.delete(options)` `api.head(options)` `api.options(options)` 
 
 ```typescript
-type options = {
-  pathName: string;
-  opts?: Response;
-};
+type OtherMethodArgs = [
+    pathName: string,
+    opts?: FetchOpts // same as get request (see above)
+];
 ```
+
+Same as GET except the other methods use a second argument for the options (and no cacheTime). Expects a JSON response by default, but can changed (see`api.get`). 
 
 ### `api.invalidate(key)`
 
