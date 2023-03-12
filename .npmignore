@@ -1,6 +1,7 @@
 src
 .eslintrc.js
 jest.config.ts
+vitest.config.ts
 tsconfig.json
 node_modules
 coverage
