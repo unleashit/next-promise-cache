@@ -27,6 +27,8 @@ export default class API {
 
   private readonly _maxCacheSize;
 
+  private readonly _isNextJSFetch;
+
   private readonly _debug;
 
   private _getCalls = 0;
@@ -49,8 +51,13 @@ export default class API {
     this._defaultCacheTime = defaultCacheTime;
     this._maxCacheSize = maxCacheSize;
     this._debug = debug;
+    this._isNextJSFetch = !!(fetch as any).__nextPatched;
 
-    this._debug && console.log("-- New Fetch Cache instantiated --");
+    if (this._debug) {
+      console.log("-- New Fetch Cache instantiated --");
+      this._isNextJSFetch &&
+        console.log("-- Next.JS patched Fetch detected --");
+    }
   }
 
   async get<T>(path: string): Promise<T>;
@@ -73,7 +80,7 @@ export default class API {
     const encodedPath = pathName;
     const responseType = opts?.responseType || "json";
 
-    // throw error if user is using JS and provided wrong responseType
+    // throw error if user is using JS and provides wrong responseType
     this[validate](responseType);
 
     this._getCalls++;
@@ -88,9 +95,13 @@ export default class API {
     }
 
     // otherwise, make a new request
-    const defaultOpts = {
+    const defaultOpts: RequestInit = {
       headers: new Headers({ "Content-Type": "application/json" }),
       method: "get",
+      // Next.JS defaults cache prop to "force-cache"
+      // When Next is detected, we change the default to "no-store" to avoid double caching in an SSR env
+      // for SSG, the cache setting should be manually set to "force-cache" or similar.
+      ...(this._isNextJSFetch && { cache: "no-store" }),
     };
     const finalOpts = {
       ...defaultOpts,

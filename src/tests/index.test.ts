@@ -19,6 +19,7 @@ global.fetch = vi.fn();
 
 beforeEach(() => {
   mockFetch();
+  // if window is undefined, it is assumed running on server
   (global as any).window = undefined;
   api = new API({ baseurl: "https://example.com", defaultCacheTime: 5 });
 });
@@ -79,8 +80,7 @@ describe("GET requests", () => {
     // );
   });
 
-  describe("Server tests", () => {
-    // if window is undefined, it is assumed running on server
+  describe("Cache tests (server)", () => {
     it("cached promise is always returned on repeat requests, cacheTime is ignored", async () => {
       await api.get<User[]>("/users");
       await api.get<User[]>("/users");
@@ -92,9 +92,37 @@ describe("GET requests", () => {
       );
       expect((fetch as Mock).mock.calls).toHaveLength(1);
     });
+
+    it("default fetch cache property set in NextJS 13 env", async () => {
+      await api.get<User[]>("/users");
+
+      expect(fetch).toHaveBeenCalledWith("https://example.com/users", {
+        method: "get",
+        headers: expect.any(Object),
+      });
+
+      Object.defineProperty(fetch, "__nextPatched", {
+        value: true,
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+
+      api = new API({ baseurl: "https://example.com" });
+
+      await api.get<User[]>("/users");
+
+      expect(fetch).toHaveBeenCalledWith("https://example.com/users", {
+        method: "get",
+        headers: expect.any(Object),
+        cache: "no-store",
+      });
+
+      delete (fetch as any).__nextPatched;
+    });
   });
 
-  describe("Browser tests", () => {
+  describe("Cache tests (browser)", () => {
     it("in browser env, promises are not cached by default", async () => {
       // simulate a browser env
       (global as any).window = {};
