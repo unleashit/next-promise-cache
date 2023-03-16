@@ -25,11 +25,15 @@ npm install @unleashit/fetch-cache
 ```
 
 ## Requirements
-Fetch on Node requires Node v18+ (or 17.5 with experimental flag).
+
+- Node >= 16.8 in a Next JS 13 app directory environment
+- Node v18+ (or 17.5 with experimental flag) for other environments without a patched Fetch
+
+In Next JS 13 (app directory enabled), Fetch is patched to work down to 16.8. React.cache (which uses Node's Async Context) also requires Node 16.8+.
 
 ## Setting up
 
-If you are using this with Next JS and React Server Components, `fetch-cache` should be wrapped within `React.cache` (provided by Next) and imported from a separate file. This will cache the instance for the lifetime of the request (and throw out on each new request).
+If you are using this with Next JS and React Server Components, it's suggested to initialize `fetch-cache` within `React.cache` (provided by React) and import from a separate file. Since Next.Js has decided not to provide full access to the Request/Response objects (a mini tragedy if you ask me), React provides this helper which makes use of Async Context. You can for example use it to cache an instance of `fetch-cache` for the lifetime of each request (and throw out after).
 
 ```typescript
 // services.ts
@@ -42,7 +46,7 @@ const baseurl = "https://amazing-products.com";
 export const api = cache(() => new API({ baseurl }));
 
 ```
-If you want to  use on the client, don't wrap in `React.cache`. It only works on the server and isn't needed on the client.
+If you want to use on the client, don't wrap in `React.cache`. It only works on the server and isn't needed on the client.
 
 ```typescript
 export const api = typeof window === "undefined"
@@ -53,7 +57,7 @@ export const api = typeof window === "undefined"
 
 > **_NOTE:_**  Keep in mind `React.cache` takes a function. So being consistent between client and server will maintain the same calling syntax. 
 
-Of course if you're not using RSCs or want it only on the client, you don't need the above. Just instantiate and use as normal. If you have a custom server and want a fresh cache with each request, either create a new instance per request or reset the cache with `api.invalidate('*')`.
+Of course if you're not using Next 13 or React or want it only on the client, you don't need the above. If you have a custom server and want a fresh cache with each request, either add the instance to your request context or reset the cache in an early middleware with `api.invalidate('*')`.
 
 ## Using
 
@@ -96,7 +100,7 @@ Creates a new instance of fetch cache. Note that by default, `defaultCacheTime` 
 type options = {
     baseurl: string;
     debug?: boolean | 'verbose'// false,
-    defaultCacheTime?: number // 0 (milliseconds)
+    defaultCacheTime?: number // 0 (seconds)
     maxCacheSize?: number // 200 (-1 for no limit)
 }
 ```
