@@ -52,6 +52,7 @@ describe("GET requests", () => {
   });
 
   it("can be called with or without base url", async () => {
+    // without base url case has already been proven above
     await api.get<User[]>("https://example.com/users");
     expect(fetch).toHaveBeenCalledWith(
       "https://example.com/users",
@@ -81,9 +82,9 @@ describe("GET requests", () => {
   describe("Server tests", () => {
     // if window is undefined, it is assumed running on server
     it("cached promise is always returned on repeat requests, cacheTime is ignored", async () => {
-      await api.get<User[]>({ pathName: "/users", cacheTime: 0 });
-      await api.get<User[]>({ pathName: "/users", cacheTime: 0 });
-      await api.get<User[]>({ pathName: "/users", cacheTime: 0 });
+      await api.get<User[]>("/users");
+      await api.get<User[]>("/users");
+      await api.get<User[]>("/users");
 
       expect(fetch).toHaveBeenCalledWith(
         "https://example.com/users",
