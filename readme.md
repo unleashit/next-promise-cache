@@ -29,7 +29,7 @@ npm install @unleashit/fetch-cache
 - Node >= 16.8 in a Next JS 13 app directory environment
 - Node v18+ (or 17.5 with experimental flag) for other environments without a patched Fetch
 
-In Next JS 13 (app directory enabled), Fetch is patched to work down to 16.8. React.cache (which uses Node's Async Context) also requires Node 16.8+.
+In Next JS 13 (app directory enabled), Fetch is patched to work down to 16.8.
 
 ## Setting up
 
@@ -55,7 +55,7 @@ export const api = typeof window === "undefined"
 
 ```
 
-> **_NOTE:_**  Keep in mind `React.cache` takes a function. So being consistent between client and server will maintain the same calling syntax. 
+> Keep in mind `React.cache` takes a function. So being consistent between client and server will maintain the same calling syntax. 
 
 Of course if you're not using Next 13 or React or want it only on the client, you don't need the above. If you have a custom server and want a fresh cache with each request, either add the instance to your request context or reset the cache in an early middleware with `api.invalidate('*')`.
 
@@ -65,12 +65,15 @@ Retrieving data is similar to how Next recommends using fetch. If you need the s
 
 As a convenience, `fetch-cache` handles the double promise and error states. By default it will assume and attempt to return JSON, but you can specifify whatever format you need (text, blob, etc.). If the response contains a non-2xx status code, a `FetchCacheError` is thrown with the original `Response` and `status`. A general failure like a network issue throws the standard error.
 
-> **_NOTE:_**  Don't forget if you've exported a _function that returns the instance_, you have to call it first, either in advance or inline with each use.
+>  Don't forget if you've exported a _function that returns the instance_, you have to call it first, either in advance or inline with each use.
 
+> **_IMPORTANT:_**  If `fetch-cache` detects Next.JS's patched fetch, for get requests it will pass a default `cache` property of `no-store` to fetch. In Next 13 (app directory enabled) the default is `force-cache`. This is to prevent double caching in an SSR environment. IF YOU NEED SSG, you should pass a `cache` option like 'force-cache'. You can pass the `revalidate` option as usual and/or use route segment config options.
 
 ```typescript jsx
 import api from './services';
 
+// React Server Component example. On the client (or server without RSCs), 
+// call inside a use (once stable) or useEffect hook
 async function Page() {
     const products = await api<Products[]>().get('/products');
     
@@ -86,11 +89,19 @@ async function Page() {
     )
 }
 
+// pass cache,revalidate or any other fetch options as normal
+async function Page() {
+    const products = await api<Products[]>()
+        .get('/products', { cache: "force-cache", next: { revalidate: 60 } });
+    
+    // ...
+}
+
 ```
 
 ## Api
 
-> **_NOTE:_**  Keep in mind passing `opts` to fetch methods will be shallowly merged with defaults. For example, if you pass any custom headers, be sure to also include `Content-Type: application/json` if you need it.
+> Keep in mind passing `opts` to fetch methods will be shallowly merged with defaults. For example, if you pass any custom headers, be sure to also include `Content-Type: application/json` if you need it.
 
 ### `new API(options)`
 
