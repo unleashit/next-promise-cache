@@ -1,6 +1,6 @@
 {
   "name": "@unleashit/fetch-cache",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Isomorphic fetch wrapper and promise cache with React Server Components in mind",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
