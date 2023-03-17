@@ -6,6 +6,8 @@
 
 Wasn't satisfied with the black boxed way of data fetching in the new [Next JS 13 app directory](https://nextjs.org/blog/next-13#new-app-directory-beta), so I made this. This is also a wrapper around [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch), but slightly higher level and with a bit more control and insight into what is being cached. It's also browser compatible.
 
+> This is an experimental package. Yes, it does basically reinvent the wheel of Next's fetch deduping but with some new features. There is a small caveat. If you use this with Next 13 RSCs and static rendering (the default), Next's patched fetch isn't prevented from also memoizing their values underneath this cache. This doesn't affect SSR (`no-store`, `force-dynamic`, etc.) and while it "feels" a bit ugly, it shouldn't have a negative effect on SSG or ISR. Ideally, they wouldn't have overwritten the native fetch, but it is what it is.   
+
 # Features
 
 - Like Next JS Fetch deduping it caches promises, not values, avoiding race conditions and extra network requests
@@ -66,8 +68,6 @@ Retrieving data is similar to how Next recommends using fetch. If you need the s
 As a convenience, `fetch-cache` handles the double promise and error states. By default it will assume and attempt to return JSON, but you can specifify whatever format you need (text, blob, etc.). If the response contains a non-2xx status code, a `FetchCacheError` is thrown with the original `Response` and `status`. A general failure like a network issue throws the standard error.
 
 >  Don't forget if you've exported a _function that returns the instance_, you have to call it first, either in advance or inline with each use.
-
-> **_IMPORTANT:_**  If `fetch-cache` detects Next.JS's patched fetch, for get requests it will pass a default `cache` property of `no-store` to fetch. In Next 13 (app directory enabled) the default is `force-cache`. This is to prevent double caching in an SSR environment. IF YOU NEED SSG, you should pass a `cache` option like 'force-cache'. You can pass the `revalidate` option as usual and/or use route segment config options.
 
 ```typescript jsx
 import api from './services';

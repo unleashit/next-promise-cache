@@ -93,7 +93,7 @@ describe("GET requests", () => {
       expect((fetch as Mock).mock.calls).toHaveLength(1);
     });
 
-    it("default fetch cache property set in NextJS 13 env", async () => {
+    it.skip("default fetch cache property set in NextJS 13 env", async () => {
       await api.get<User[]>("/users");
 
       expect(fetch).toHaveBeenCalledWith("https://example.com/users", {

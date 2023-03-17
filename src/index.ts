@@ -51,6 +51,7 @@ export default class API {
     this._defaultCacheTime = defaultCacheTime;
     this._maxCacheSize = maxCacheSize;
     this._debug = debug;
+    // Detect a patched fetch. Leaving in for now for possible future use...
     this._isNextJSFetch = !!(fetch as any).__nextPatched;
 
     if (this._debug) {
@@ -98,10 +99,6 @@ export default class API {
     const defaultOpts: RequestInit = {
       headers: new Headers({ "Content-Type": "application/json" }),
       method: "get",
-      // Next.JS defaults cache prop to "force-cache"
-      // When Next is detected, we change the default to "no-store" to avoid double caching in an SSR env
-      // for SSG, the cache setting should be manually set to "force-cache" or similar.
-      ...(this._isNextJSFetch && { cache: "no-store" }),
     };
     const finalOpts = {
       ...defaultOpts,
