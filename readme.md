@@ -31,41 +31,44 @@ npm install @unleashit/fetch-cache
 - Node >= 16.8 in a Next JS 13 app directory environment
 - Node v18+ (or 17.5 with experimental flag) for other environments without a patched Fetch
 
-In Next JS 13 (app directory enabled), Fetch is patched to work down to 16.8.
+In Next JS 13 (app directory enabled), Fetch is patched to work down to 16.8. `React.cache` is currently only available in experimental or Next 13 builds.
 
 ## Setting up
 
-If you are using this with Next JS and React Server Components, it's suggested to initialize `fetch-cache` within `React.cache` (provided by React) and import from a separate file. Since Next.Js has decided not to provide full access to the Request/Response objects (a mini tragedy if you ask me), React provides this helper which makes use of Async Context. You can for example use it to cache an instance of `fetch-cache` for the lifetime of each request (and throw out after).
+If you are using this with Next JS and React Server Components, it's suggested to initialize `fetch-cache` within `React.cache` and import from a separate file. Since Next.Js has decided not to provide full access to the Request/Response objects (a mini tragedy if you ask me), React provides this helper which makes use of Async Context. You can for example use it to cache an instance of `fetch-cache` for the lifetime of each request (and throw out after).
 
 ```typescript
 // services.ts
 
-import API from "./api";
+import FetchCache from "@unleashit/fetch-cache";
 import { cache } from "react";
 
 const baseurl = "https://amazing-products.com";
 
-export const api = cache(() => new API({ baseurl }));
+export const api = cache(() => new FetchCache({ baseurl }));
 
 ```
-If you want to use on the client, don't wrap in `React.cache`. It only works on the server and isn't needed on the client.
+To use isomorphically, the setup can be a bit particular because you only want to wrap `fetch-cache` in `React.cache` on the server. One option is to create separate files for client and server. But you can manage within a single file like this:
 
 ```typescript
-export const api = typeof window === "undefined"
-    ? cache(() => new API({ baseurl }))
-    : () => new API({ baseurl });
+const clientInstance =
+    typeof window !== "undefined" &&
+    new FetchCache({ baseurl });
 
+export const api = typeof window === "undefined"
+    ? cache(() => new FetchCache({ baseurl }))
+    : () => clientInstance;
 ```
 
-> Keep in mind `React.cache` takes a function. So being consistent between client and server will maintain the same calling syntax. 
+> Keep in mind `React.cache` returns a function. The reason for also exporting the client instance as a function is just to maintain consistent calling syntax in both environments. A workaround to prevent the client function from creating a new instance each time is to initialize it in a separate variable. Unfortunately, simply memoizing both with `React.cache` won't work on the client since it would reinstantiate on page changes.
 
-Of course if you're not using Next 13 or React or want it only on the client, you don't need the above. If you have a custom server and want a fresh cache with each request, either add the instance to your request context or reset the cache in an early middleware with `api.invalidate('*')`.
+Of course if you're not using Next 13 or React or want it only on the client, the above doesn't apply. If you have a custom server and want a fresh cache with each request, either add the instance to your request context or reset the cache in an early middleware with `api.invalidate('*')`.
 
 ## Using
 
 Retrieving data is similar to how Next recommends using fetch. If you need the same data in multiple places, rather than prop drilling, just await the promise in each place you need it. Thanks to the cache, it will only actually be called once.
 
-As a convenience, `fetch-cache` handles the double promise and error states. By default it will assume and attempt to return JSON, but you can specifify whatever format you need (text, blob, etc.). If the response contains a non-2xx status code, a `FetchCacheError` is thrown with the original `Response` and `status`. A general failure like a network issue throws the standard error.
+As a convenience, `fetch-cache` handles the double promise and error states. By default it will assume and attempt to return JSON, but you can specify whatever format you need (text, blob, etc.). If the response contains a non-2xx status code, a `FetchCacheError` is thrown with the original `Response` and `status`. A general failure like a network issue throws the standard error.
 
 >  Don't forget if you've exported a _function that returns the instance_, you have to call it first, either in advance or inline with each use.
 
@@ -73,8 +76,9 @@ As a convenience, `fetch-cache` handles the double promise and error states. By 
 import api from './services';
 
 // React Server Component example. On the client (or server without RSCs), 
-// call inside a use (once stable) or useEffect hook
+// call inside a use hook (once stable) or useEffect.
 async function Page() {
+    // Notice the api().get syntax. This is because api is exported as a function
     const products = await api<Products[]>().get('/products');
     
     return (
@@ -89,7 +93,7 @@ async function Page() {
     )
 }
 
-// pass cache,revalidate or any other fetch options as normal
+// pass cache, revalidate or any other fetch options as normal
 async function Page() {
     const products = await api<Products[]>()
         .get('/products', { cache: "force-cache", next: { revalidate: 60 } });
@@ -103,7 +107,7 @@ async function Page() {
 
 > Keep in mind passing `opts` to fetch methods will be shallowly merged with defaults. For example, if you pass any custom headers, be sure to also include `Content-Type: application/json` if you need it.
 
-### `new API(options)`
+### `new FetchCache(options)`
 
 Creates a new instance of fetch cache. Note that by default, `defaultCacheTime` is set to `0`. This is only for the client (server is always cached per request), so if you want a cache on the client, you need to either specify a default here and/or override in individual fetches.
 
@@ -158,7 +162,7 @@ type key = string;
 
 ### `api.getCacheStats()`
 
-Returns object with two properties: `values` (Map object of the current cache) and `cacheSize` (size).
+Returns object with two properties: `values` (Map object of the current cache) and `size` (cache size).
 
 ### `api.logCache()`
 
