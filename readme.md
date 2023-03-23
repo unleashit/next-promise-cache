@@ -53,7 +53,9 @@ To use isomorphically, the setup can be a bit particular because you only want t
 ```typescript
 const clientInstance =
     typeof window !== "undefined" &&
-    new FetchCache({ baseurl });
+    // to use cache on the client, you can set a default as shown here
+    // and/or override in individual GET requests
+    new FetchCache({ baseurl, defaultCacheTime: 1800 });
 
 export const api = typeof window === "undefined"
     ? cache(() => new FetchCache({ baseurl }))
@@ -93,7 +95,7 @@ async function Page() {
     )
 }
 
-// pass cache, revalidate or any other fetch options as normal
+// pass fetch options as normal, including Next's caching params
 async function Page() {
     const products = await api<Products[]>()
         .get('/products', { cache: "force-cache", next: { revalidate: 60 } });
