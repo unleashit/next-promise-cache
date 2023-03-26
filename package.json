@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "start": "rm -rf ./dist && tsc --watch",
     "build": "rm -rf ./dist && tsc",
     "test": "vitest",
     "prepublishOnly": "vitest run && npm run build"

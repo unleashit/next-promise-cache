@@ -1,4 +1,4 @@
-import { nextTick } from "./utils";
+import { mockPromise, nextTick } from "./utils";
 import API from "../index";
 import { users, User, newUser } from "./fixtures";
 import { mockFetch } from "./mockFetch";
@@ -15,7 +15,7 @@ import {
 
 let api: API;
 
-global.fetch = vi.fn();
+vi.stubGlobal("fetch", vi.fn());
 
 beforeEach(() => {
   mockFetch();
@@ -242,6 +242,64 @@ describe("Mutate requests", () => {
     const calledWith3 = (fetch as Mock).mock.calls[2][1];
     expect(calledWith3.method).toEqual("delete");
     expect(resp3).toEqual({ success: true });
+  });
+});
+
+describe("memo", () => {
+  it("memoed promises return expected values", async () => {
+    const num1 = await api.memo("num1", () => Promise.resolve(1));
+    const num2 = await api.memo("num2", () => Promise.resolve(2));
+    // TODO: mock this so fragile network call not needed
+    const user = await api.memo<User>("user", () =>
+      fetch("https://jsonplaceholder.typicode.com/users/1").then((r) =>
+        r.json()
+      )
+    );
+
+    expect(num1).toEqual(1);
+    expect(num2).toEqual(2);
+    expect(user.id).toEqual("1");
+  });
+
+  it("in a *server* (always cached) env, multiple memos with same key return the first promise", async () => {
+    await api.memo("test", () => mockPromise("one"));
+    await api.memo("test", () => mockPromise("two"));
+    const test = await api.memo("test", () => mockPromise("three"));
+    expect(test).toEqual("one");
+  });
+
+  it("in a *browser* env with no cache, memos with same key return the latest promise", async () => {
+    // simulate a browser env
+    (global as any).window = {};
+
+    await api.memo("pet", () => mockPromise("cat"), 0);
+    await api.memo("pet", () => mockPromise("dog"), 0);
+    const call2 = await api.memo("pet", () => mockPromise("mouse"), 0);
+
+    expect(call2).toEqual("mouse");
+  });
+
+  it("in a *browser* env, cached memos with same key return the original promise", async () => {
+    // simulate a browser env
+    (global as any).window = {};
+
+    // with cache (defaultCacheTime set above to 5 secs)
+    await api.memo("pet", () => mockPromise("cat"));
+    await api.memo("pet", () => mockPromise("dog"));
+    const pet = await api.memo("pet", () => mockPromise("mouse"));
+    expect(pet).toEqual("cat");
+  });
+
+  it("in a *browser* env, cached memos with same key expire properly", async () => {
+    // simulate a browser env
+    (global as any).window = {};
+
+    // with cache and enough time passing to invalidate first call
+    await api.memo("pet", () => mockPromise("cat"), 1);
+    await nextTick(1250);
+    await api.memo("pet", () => mockPromise("dog"), 1);
+    const pet2 = await api.memo("pet", () => mockPromise("mouse"), 1);
+    expect(pet2).toEqual("dog");
   });
 });
 

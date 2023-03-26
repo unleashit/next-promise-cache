@@ -7,6 +7,7 @@ const handleResp = Symbol("handleResp");
 const handleError = Symbol("handleError");
 const shouldUseCache = Symbol("shouldUseCache");
 const validate = Symbol("validate");
+const setCache = Symbol("setCache");
 
 let getCallsTotal = 0;
 
@@ -56,8 +57,9 @@ export default class API {
 
     if (this._debug) {
       console.log("-- New Fetch Cache instantiated --");
-      this._isNextJSFetch &&
-        console.log("-- Next.JS patched Fetch detected --");
+    }
+    if (this._debug === "verbose" && this._isNextJSFetch) {
+      console.log("-- Next.JS patched Fetch detected --");
     }
   }
 
@@ -113,20 +115,7 @@ export default class API {
         this[handleError](e);
       });
 
-    // check if path exists then purge, since it will be stale
-    this.invalidate(encodedPath);
-
-    // purge first in value when cache is full
-    if (this._maxCacheSize !== -1 && this[cache].size === this._maxCacheSize) {
-      this.invalidate(this[cache].keys().next().value);
-    }
-
-    this[cache].set(encodedPath, {
-      promise,
-      timestamp: new Date().getTime(),
-    });
-
-    this._debug && this.logCache();
+    this[setCache](encodedPath, promise);
 
     return promise;
   }
@@ -153,6 +142,29 @@ export default class API {
 
   async options<T>(...args: HandlerArgs) {
     return this[handler]("options", ...args) as Promise<T>;
+  }
+
+  async memo<T>(
+    key: string,
+    fn: () => Promise<T>,
+    cacheTime = this._defaultCacheTime
+  ) {
+    this._getCalls++;
+    getCallsTotal++;
+    const encodedPath = key;
+
+    if (this[shouldUseCache](encodedPath, cacheTime)) {
+      this._debug && console.log("-- Fetch cache hit --");
+      this._debug && this.logCache();
+
+      return this[cache].get(encodedPath)?.promise as Promise<T>;
+    }
+
+    const promise = fn();
+
+    this[setCache](encodedPath, promise);
+
+    return promise;
   }
 
   async [handler](
@@ -195,7 +207,7 @@ export default class API {
     return responseType === "json"
       ? (resp.json() as Promise<T>)
       : responseType === "text"
-      ? (resp.blob() as Promise<T>)
+      ? (resp.text() as Promise<T>)
       : responseType === "blob"
       ? (resp.blob() as Promise<T>)
       : responseType === "arrayBuffer"
@@ -227,6 +239,23 @@ export default class API {
 
     // on the client, invalidate cache on expiration
     return new Date().getTime() - value.timestamp < cacheTime * 1000; // convert secs to ms;
+  }
+
+  [setCache]<T>(path: string, promise: Promise<T>) {
+    // check if path exists then purge, since it will be stale
+    this.invalidate(path);
+
+    // purge first in value when cache is full
+    if (this._maxCacheSize !== -1 && this[cache].size === this._maxCacheSize) {
+      this.invalidate(this[cache].keys().next().value);
+    }
+
+    this[cache].set(path, {
+      promise,
+      timestamp: new Date().getTime(),
+    });
+
+    this._debug && this.logCache();
   }
 
   [validate](responseType: ResponseTypes) {
@@ -268,7 +297,7 @@ export default class API {
     console.log({
       getCallsInstance: this._getCalls,
       getCallsTotal,
-      cache:
+      size:
         this._debug === "verbose"
           ? Object.fromEntries(this[cache])
           : this[cache].size,
