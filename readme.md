@@ -4,9 +4,9 @@
 [![npm (scoped)](https://img.shields.io/npm/v/@unleashit/fetch-cache.svg)](https://www.npmjs.com/package/@unleashit/fetch-cache)
 [![npm bundle size](https://img.shields.io/bundlephobia/minzip/@unleashit/fetch-cache.svg)](https://bundlephobia.com/result?p=@unleashit/fetch-cache)
 
-Wasn't satisfied with the black boxed way of data fetching in the new [Next JS 13 app directory](https://nextjs.org/blog/next-13#new-app-directory-beta), so I made this. This is also a wrapper around [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch), but slightly higher level and with a bit more control and insight into what is being cached. It's also browser compatible.
+Wasn't satisfied with the black boxed and inconsistent way of data fetching in the new [Next JS 13 app directory](https://nextjs.org/blog/next-13#new-app-directory-beta), so I made this. This is an attempt to combine a [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) wrapper similar to the one provided by Next.Js with other data fetching methods like raw DB queries or anything that returns a promise, into a single deduping/caching api. In addition, it is browser compatible and offers a bit more control and insight into what is being cached.
 
-> This is an experimental package. Yes, it does basically reinvent the wheel of Next's fetch deduping but with some new features. There is a small caveat. If you use this with Next 13 RSCs and static rendering (the default), Next's patched fetch isn't prevented from also memoizing their values underneath this cache. This doesn't affect SSR (`no-store`, `force-dynamic`, etc.) and while it "feels" a bit ugly, it shouldn't have a negative effect on SSG or ISR. Ideally, they wouldn't have overwritten the native fetch, but it is what it is.   
+> This is an experimental package that is geared towards Next.JS and React server components (but not a requirement). Yes, it does in part reinvent the wheel of Next's fetch deduping, but it also allows for better consistency and adds some interesting features. There is a small caveat. If you use this with Next 13 RSCs, Next's patched fetch isn't prevented from also memoizing its values underneath this cache. While that may "feel" a bit ugly, it shouldn't have any measurable drawbacks and all of your Next options (including route segment configs) will be respected. Ideally they wouldn't have overwritten the native fetch, but it is what it is.   
 
 # Features
 
@@ -15,7 +15,8 @@ Wasn't satisfied with the black boxed way of data fetching in the new [Next JS 1
 - Optional time based cache on client
 - Can debug, access or invalidate values or entire cache
 - Configurable cache size (FIFO when full) 
-- All HTTP methods are available but caches GET requests only
+- All HTTP methods are available plus a `memo` method to cache any other type of promise
+- Only `get` requests or the provided `memo` can be cached. Other HTTP verbs are pass through.
 - Handles the fetch double promise, basic error conditions and adds common headers
 - Types include the Next extensions to fetch, so you can add for example Next's revalidate options as usual
 - Customize/override most things
@@ -153,6 +154,28 @@ type OtherMethodArgs = [
 ```
 
 Same as GET except the other methods use a second argument for the options (and no cacheTime). Expects a JSON response by default, but can changed (see`api.get`). 
+
+### `api.memo(options)`
+
+```typescript
+type options = [key: string, fn: <T>() => Promise<T>, cacheTime?: number]; // cacheTime defaults to `defaultCacheTime` or 0
+```
+
+Accepts and optionally caches any type of promise. You can for example use it to memoize a database request, or anything else that returns a promise. The behavior is otherwise the same as `api.get()`. Both methods always cache on the server. So as with fetch, you can await the same memoed promise in different parts of the app and they will be deduped as long as they share the same `key` name. On the client (also like fetch), memoed promises are only actually cached if `cacheTime` is set. You can set it as a default when you initialze `fetch-cache`, and/or provide as a third argument in `api.memo()`. The latter overrides any default.
+
+```typescript jsx
+async function Page() {
+    // Notice the api().memo syntax. This is because api is exported as a function
+    const result = await api<{ rows: { message: string }[] }>()
+        .memo(() => client.query('SELECT $1::text as message', ['Hello world!']));
+    
+    return (
+        <div>The message for today is: {result.rows[0].message}</div>
+    )
+}
+```
+
+> Note that any cache is shared between `api.memo()` and `api.get()`. A name collision is unlikely since the key names created by `api.get()` are URL paths, but good to keep in mind.   
 
 ### `api.invalidate(key)`
 
