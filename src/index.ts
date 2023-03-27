@@ -1,4 +1,4 @@
-import { FetchCacheError } from "./FetchCacheError";
+import { NextPromiseCacheError } from "./NextPromiseCacheError";
 import { type GetHandlerArgs, type HandlerArgs, ResponseTypes } from "./types";
 
 const cache = Symbol("cache");
@@ -14,12 +14,12 @@ let getCallsTotal = 0;
 /*
  * Isomorphic promise cache for fetch and React.cache (when on the server). Compatible with
  * React Server Components and the NextJS 13 app directory.
- * Promises from GET requests are always cached on the server for the lifecycle of each request (cacheTime param is ignored)
- * Promises from GET requests on the client can be cached for a designated time (not cached by default)
+ * Promises from `get` and `memo` are always cached on the server for the lifecycle of each request (cacheTime param is ignored)
+ * Promises from `get` and `memo` on the client can be cached for a designated time (not cached by default)
  * @param API.baseurl Base url for the api
  * @param API.debug Debug output (cache hits, etc.)
  * @param API.maxValues Maximum number of values to be stored in cache
- * @returns Instance of API with standard fetch methods
+ * @returns Instance of API with standard fetch and other methods
  * */
 export default class API {
   private readonly _baseurl;
@@ -198,7 +198,7 @@ export default class API {
   async [handleResp]<T>(resp: Response, responseType: ResponseTypes) {
     if (!resp.ok) {
       this._debug === "verbose" && console.error(resp);
-      throw new FetchCacheError(
+      throw new NextPromiseCacheError(
         new Error(`Problem fetching. Status: ${resp.status}`),
         resp
       );
@@ -220,7 +220,7 @@ export default class API {
     this._debug === "verbose" && console.error(e);
 
     // if (e instanceof Error || (e as Error)?.message) {
-    //   throw new FetchCacheError(e as Error, 500);
+    //   throw new NextPromiseCacheError(e as Error, 500);
     // }
 
     throw e;

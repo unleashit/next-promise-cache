@@ -2,7 +2,7 @@ import { mockPromise, nextTick } from "./utils";
 import API from "../index";
 import { users, User, newUser } from "./fixtures";
 import { mockFetch } from "./mockFetch";
-import { FetchCacheError } from "../FetchCacheError";
+import { NextPromiseCacheError } from "../NextPromiseCacheError";
 import {
   afterEach,
   beforeEach,
@@ -61,7 +61,7 @@ describe("GET requests", () => {
     );
   });
 
-  it("throws FetchCacheError with 404 status and fetch's Response when sent to bad url", async () => {
+  it("throws NextPromiseCacheError with 404 status and fetch's Response when sent to bad url", async () => {
     let thrownError;
     try {
       await api.get("/users/bling");
@@ -69,14 +69,16 @@ describe("GET requests", () => {
       thrownError = err;
     }
 
-    expect(thrownError).toBeInstanceOf(FetchCacheError);
-    expect((thrownError as FetchCacheError).message).toEqual(
+    expect(thrownError).toBeInstanceOf(NextPromiseCacheError);
+    expect((thrownError as NextPromiseCacheError).message).toEqual(
       "Problem fetching. Status: 404"
     );
     // ensure fetch response is included in error
-    expect((thrownError as FetchCacheError).fetchResponse).toHaveProperty("ok");
+    expect((thrownError as NextPromiseCacheError).fetchResponse).toHaveProperty(
+      "ok"
+    );
     // expect(async () => await api.get("/users/bling")).rejects.toThrow(
-    //   FetchCacheError
+    //   NextPromiseCacheError
     // );
   });
 

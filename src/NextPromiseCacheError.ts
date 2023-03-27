@@ -1,4 +1,4 @@
-export class FetchCacheError extends Error {
+export class NextPromiseCacheError extends Error {
   status: number;
   fetchResponse: Response;
 
@@ -7,7 +7,7 @@ export class FetchCacheError extends Error {
 
     // Set the prototype explicitly for builtin objs when using <= ES5 target
     // https://www.typescriptlang.org/docs/handbook/2/classes.html
-    Object.setPrototypeOf(this, FetchCacheError.prototype);
+    Object.setPrototypeOf(this, NextPromiseCacheError.prototype);
 
     this.name = err.name || "Fetch Cache error";
     this.status = fetchResponse.status || 500;
