@@ -1,8 +1,8 @@
 # next-promise-cache
 
-[![NPM](https://img.shields.io/npm/l/@unleashit/next-promise-cache.svg)](https://github.com/unleashit/next-promise-cache/blob/master/LICENSE)
-[![npm (scoped)](https://img.shields.io/npm/v/@unleashit/next-promise-cache.svg)](https://www.npmjs.com/package/@unleashit/next-promise-cache)
-[![npm bundle size](https://img.shields.io/bundlephobia/minzip/@unleashit/next-promise-cache.svg)](https://bundlephobia.com/result?p=@unleashit/next-promise-cache)
+[![NPM](https://img.shields.io/npm/l/next-promise-cache.svg)](https://github.com/unleashit/next-promise-cache/blob/master/LICENSE)
+[![npm (scoped)](https://img.shields.io/npm/v/next-promise-cache.svg)](https://www.npmjs.com/package/next-promise-cache)
+[![npm bundle size](https://img.shields.io/bundlephobia/minzip/next-promise-cache.svg)](https://bundlephobia.com/result?p=next-promise-cache)
 
 Wasn't satisfied with the black boxed and inconsistent way of data fetching in the new [Next JS 13 app directory](https://nextjs.org/blog/next-13#new-app-directory-beta), so I made this. This is an attempt to combine a [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) wrapper similar to the one provided by Next.Js with other data fetching methods like raw DB queries or anything that returns a promise, into a single deduping/caching api. In addition, it is browser compatible and offers a bit more control and insight into what is being cached.
 
