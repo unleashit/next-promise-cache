@@ -53,7 +53,7 @@ export default class API {
     this._maxCacheSize = maxCacheSize;
     this._debug = debug;
     // Detect a patched fetch. Leaving in for now for possible future use...
-    this._isNextJSFetch = (fetch as typeof fetch & { __nextPatched: boolean }).__nextPatched;
+    this._isNextJSFetch = !!(fetch as typeof fetch & { __nextPatched?: boolean  }).__nextPatched;
 
     if (this._debug) {
       console.log("[npc] New Fetch Cache instantiated");
