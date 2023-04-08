@@ -1,6 +1,6 @@
 export class NextPromiseCacheError extends Error {
   status: number;
-  fetchResponse: Response;
+  response: Response;
 
   constructor(err: Error, fetchResponse: Response) {
     super(err.message || "Fetch Cache error");
@@ -11,7 +11,7 @@ export class NextPromiseCacheError extends Error {
 
     this.name = err.name || "Fetch Cache error";
     this.status = fetchResponse.status || 500;
-    this.fetchResponse = fetchResponse;
+    this.response = fetchResponse;
     if (err.stack) {
       this.stack = err.stack;
     }

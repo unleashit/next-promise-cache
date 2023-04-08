@@ -71,10 +71,10 @@ describe("GET requests", () => {
 
     expect(thrownError).toBeInstanceOf(NextPromiseCacheError);
     expect((thrownError as NextPromiseCacheError).message).toEqual(
-      "Problem fetching. Status: 404"
+      "Server responded with status 404"
     );
     // ensure fetch response is included in error
-    expect((thrownError as NextPromiseCacheError).fetchResponse).toHaveProperty(
+    expect((thrownError as NextPromiseCacheError).response).toHaveProperty(
       "ok"
     );
     // expect(async () => await api.get("/users/bling")).rejects.toThrow(

@@ -53,13 +53,13 @@ export default class API {
     this._maxCacheSize = maxCacheSize;
     this._debug = debug;
     // Detect a patched fetch. Leaving in for now for possible future use...
-    this._isNextJSFetch = !!(fetch as any).__nextPatched;
+    this._isNextJSFetch = (fetch as typeof fetch & { __nextPatched: boolean }).__nextPatched;
 
     if (this._debug) {
-      console.log("-- New Fetch Cache instantiated --");
+      console.log("[npc] New Fetch Cache instantiated");
     }
     if (this._debug === "verbose" && this._isNextJSFetch) {
-      console.log("-- Next.JS patched Fetch detected --");
+      console.log("[npc] Next.JS patched Fetch detected");
     }
   }
 
@@ -91,7 +91,7 @@ export default class API {
 
     // return from cache if exits and not expired and is running on client
     if (this[shouldUseCache](encodedPath, cacheTime)) {
-      this._debug && console.log("-- Fetch cache hit --");
+      this._debug && console.log("[npc] Fetch cache hit");
       this._debug && this.logCache();
 
       return this[cache].get(encodedPath)?.promise as Promise<T>;
@@ -154,7 +154,7 @@ export default class API {
     const encodedPath = key;
 
     if (this[shouldUseCache](encodedPath, cacheTime)) {
-      this._debug && console.log("-- Fetch cache hit --");
+      this._debug && console.log("[npc] Fetch cache hit");
       this._debug && this.logCache();
 
       return this[cache].get(encodedPath)?.promise as Promise<T>;
@@ -199,9 +199,27 @@ export default class API {
     if (!resp.ok) {
       this._debug === "verbose" && console.error(resp);
       throw new NextPromiseCacheError(
-        new Error(`Problem fetching. Status: ${resp.status}`),
+        new Error(`Server responded with status ${resp.status}`),
         resp
       );
+    }
+
+    // if client expects JSON, check for empty or invalid response
+    // if invalid JSON, try to parse as text
+    if (responseType === 'json' && resp.status > 200 && resp.status < 300) {
+      let clone: Response | undefined;
+      try {
+        clone = resp.clone();
+        return await resp.json() as Promise<T>;
+      } catch(e) {
+        this._debug && console.log('[npc] received empty or invalid JSON response, attempting to parse as text');
+        try {
+          return clone?.text() as Promise<T>;
+        } catch(e) {
+          this._debug && console.log('[npc] attempt failed to parse response as text')
+          throw e;
+        }
+      }
     }
 
     return responseType === "json"
@@ -279,10 +297,10 @@ export default class API {
   invalidate(key: string) {
     if (key === "*") {
       this[cache] = new Map();
-      this._debug && console.log("-- Cache cleared --");
+      this._debug && console.log("[npc] cache cleared");
     } else if (this[cache].has(key)) {
       this[cache].delete(key);
-      this._debug && console.log(`-- ${key} invalidated --`);
+      this._debug && console.log(`[npc] ${key} invalidated`);
     }
   }
 
@@ -294,7 +312,7 @@ export default class API {
   }
 
   logCache() {
-    console.log({
+    console.log('[npc]', {
       getCallsInstance: this._getCalls,
       getCallsTotal,
       size:
