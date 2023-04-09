@@ -56,7 +56,7 @@ export default class API {
     this._isNextJSFetch = !!(fetch as typeof fetch & { __nextPatched?: boolean  }).__nextPatched;
 
     if (this._debug) {
-      console.log("[npc] New Fetch Cache instantiated");
+      console.log("[npc] New Next Promise Cache instantiated");
     }
     if (this._debug === "verbose" && this._isNextJSFetch) {
       console.log("[npc] Next.JS patched Fetch detected");
@@ -91,7 +91,7 @@ export default class API {
 
     // return from cache if exits and not expired and is running on client
     if (this[shouldUseCache](encodedPath, cacheTime)) {
-      this._debug && console.log("[npc] Fetch cache hit");
+      this._debug && console.log("[npc] promise cache hit");
       this._debug && this.logCache();
 
       return this[cache].get(encodedPath)?.promise as Promise<T>;
@@ -154,7 +154,7 @@ export default class API {
     const encodedPath = key;
 
     if (this[shouldUseCache](encodedPath, cacheTime)) {
-      this._debug && console.log("[npc] Fetch cache hit");
+      this._debug && console.log("[npc] promise cache hit");
       this._debug && this.logCache();
 
       return this[cache].get(encodedPath)?.promise as Promise<T>;
