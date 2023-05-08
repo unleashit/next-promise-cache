@@ -6,20 +6,22 @@
 
 Wasn't satisfied with the black boxed and inconsistent way of data fetching in the new [Next JS 13 app directory](https://nextjs.org/blog/next-13#new-app-directory-beta), so I made this. This is an attempt to combine a [fetch](https://developer.mozilla.org/en-US/docs/Web/API/fetch) wrapper similar to the one provided by Next.Js with other data fetching methods like raw DB queries or anything that returns a promise, into a single deduping/caching api. In addition, it is browser compatible and offers a bit more control and insight into what is being cached.
 
-> This is an experimental package that is geared towards Next.JS and React server components (but not a requirement). Yes, it does in part reinvent the wheel of Next's fetch deduping, but it also allows for better consistency and adds some interesting features. There is a small caveat. If you use this with Next 13 RSCs, Next's patched fetch isn't prevented from also memoizing its values underneath this cache. While that may "feel" a bit ugly, it shouldn't have any measurable drawbacks and all of your Next options (including route segment configs) will be respected. Ideally they wouldn't have overwritten the native fetch, but it is what it is.   
+> This is an experimental package that is geared towards Next.JS and React server components (but not a requirement). Yes, it does in part reinvent the wheel of Next's fetch deduping, but it also allows for better consistency and adds some interesting features. There is a small caveat. If you use this with Next 13 RSCs, Next's patched fetch isn't prevented from also memoizing its own values underneath this cache. While that may "feel" a bit ugly, it shouldn't have measurable drawbacks and all of your Next options (including route segment configs) will be respected. Ideally they wouldn't have overwritten the native fetch, but it is what it is.   
 
 # Features
 
 - Like Next JS Fetch deduping it caches promises, not values, avoiding race conditions and extra network requests
 - On the server in RSCs or elsewhere, it can be made to cache for the full request/response lifetime (when instantiated in a `React.cache`)
-- Optional time based cache on client
-- Can debug, access or invalidate values or entire cache
+- Optional time based cache on client (stock Next is hardcoded at 30 secs)
+- Can debug*, access or invalidate values or entire cache
 - Configurable cache size (FIFO when full) 
 - All HTTP methods are available plus a `memo` method to cache any other type of promise
 - Only `get` requests or the provided `memo` can be cached. Other HTTP verbs are pass through.
 - Handles the fetch double promise, basic error conditions and adds common headers
 - Types include the Next extensions to fetch, so you can add for example Next's revalidate options as usual
 - Customize/override most things
+
+&ast; Next.JS enabled debug messages for serverside fetching as of version 13.4, so you may no longer need this unless you prefer more verbose logging.
 
 ## Install
 
